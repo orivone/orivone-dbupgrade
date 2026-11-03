@@ -1,6 +1,8 @@
-<!-- 本文件的编写约定见 CONTRIBUTING.md「README 维护约定」，改动前请先读那一节。 -->
+<!-- 改动本文件时同步更新 README.en.md（英文版），两边章节与结论保持一致。 -->
 
 # orivone-dbupgrade
+
+> [English version →](README.en.md)
 
 <p align="center">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
@@ -11,7 +13,7 @@
 </p>
 
 轻量级数据库**安装与升级**组件：应用启动时把库结构对齐到目标版本，首次安装与后续增量升级走同一条链路。
-适合私有化交付、内网部署，或者要同时兼容几代 Spring Boot、数据库里有达梦这类国产库的系统。
+适合私有化交付、内网部署，以及需要同时兼容多代 Spring Boot、数据库涵盖 MySQL / PostgreSQL / Oracle / SQL Server / 达梦等多种产品的系统。
 
 三个词概括：**小**、**稳**、**可编程**。
 
@@ -336,25 +338,6 @@ mvn -pl dbupgrade-demo/spring-boot-demo -am spring-boot:run -Dspring-boot.run.pr
   `1.x` 内不破坏兼容
 - **测试**：`core` 58 个用例；`demo` 5 个用例在 Boot 2.7 / 3.x / 4.x 三条线上各跑一遍，全部通过
 - **已知边界**：非 MySQL 方言尚无真实库回归；生产使用前请逐库验证（见 [已知限制](http://dbupgrade.orivone.com/project/faq.html)）
-
----
-
-## 贡献
-
-欢迎提 issue 和 PR。完整的贡献流程见 [构建、测试与贡献](http://dbupgrade.orivone.com/project/contributing.html)，
-里面写了构建命令、测试清单、编码约定和 PR 检查清单；仓库根的 [CONTRIBUTING.md](CONTRIBUTING.md)
-是入口速查，以及改动本 README 前需要遵守的约定。提交前请确保三条 Boot 线的测试都通过：
-
-```bash
-mvn test            # 默认线（Boot 4，需 JDK 17）
-mvn -Pboot3 test    # Boot 3.4.9
-mvn -Pboot2 test    # Boot 2.7.18
-```
-
-文档站的内容源在 `doc/` 目录，是纯 markdown，按用途分了四个目录：
-`start/`（上手）、`usage/`（使用）、`reference/`（参考）、`project/`（项目）。
-改完执行 `python doc/build.py` 重新生成静态站；站点路径与源文件路径一一对应。
-新增或调整章节时，记得同步 `doc/build.py` 的 `PAGES` 与 `doc/README.md` 里的索引。
 
 ---
 
