@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.orivone</groupId>
+        <artifactId>orivone-dbupgrade</artifactId>
+        <version>1.0.1</version>
+    </parent>
+
+    <artifactId>orivone-dbupgrade-lock-redisson</artifactId>
+    <version>1.0.1</version>
+
+    <name>orivone-dbupgrade-lock-redisson</name>
+    <description>基于 Redisson 的分布式锁实现，可选模块，含独立自动装配</description>
+
+    <!--
+        编译基线 Java 8（继承根 pom 的 maven.compiler.release=8）。
+        Redisson 4.6.1 及其关键传递依赖（netty 4.2、reactor-core 3.8）
+        的 class 文件均为 major 52，因此本模块不额外提高 JDK 门槛。
+    -->
+
+    <!--
+        Redis（Redisson）锁的可选模块，含它自己的自动装配。
+
+        core 不依赖任何第三方锁组件，starter 不认识 Redisson，
+        因此锁实现与装配逻辑（RedissonLockAutoConfiguration + imports）都放在本模块。
+
+        效果：不使用 Redis 锁的项目，依赖树里不会出现 redisson 及其 20 个传递依赖
+        （合计约 14.5 MB）；使用时引入本模块并配置 lock-type=redis 即生效。
+    -->
+    <dependencies>
+
+        <dependency>
+            <groupId>com.orivone</groupId>
+            <artifactId>orivone-dbupgrade-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <!--
+            版本由根 pom 的 redisson.version 统一管理（4.6.1），此处不写死。
+            要换版本时在根 pom 覆盖 <redisson.version> 即可，契约要求 JDK 8 字节码。
+        -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+        </dependency>
+
+        <!--
+            ================== 编译期依赖（provided）==================
+
+            本模块自带 @AutoConfiguration，所以需要 Spring 的注解与 @Bean。
+            按 Boot 2.7 这个最低基线编译，使用方引 2.7 / 3.x / 4.x 都能加载。
+            只用到 @AutoConfiguration、@ConditionalOnClass / MissingBean / Property、
+            @Bean、ObjectProvider、@Value，三代 Boot 中的全限定名完全一致。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>${spring-boot.baseline.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <version>${spring-boot.baseline.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>

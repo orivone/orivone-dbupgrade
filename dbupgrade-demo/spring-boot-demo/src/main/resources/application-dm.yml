@@ -1,0 +1,19 @@
+# ============================================================================
+# 达梦 DM8
+# 语法走 Oracle 那一套，脚本与 oracle/ 下基本相同；差别在驱动与连接串。
+# 达梦默认端口 5236，SYSDBA 是内置管理员账号。
+# ============================================================================
+spring:
+  datasource:
+    url: jdbc:dm://127.0.0.1:5236?schema=ORIVONE_UPGRADE_DEMO
+    username: SYSDBA
+    password: SYSDBA001
+    driver-class-name: dm.jdbc.driver.DmDriver
+
+orivone:
+  dbupgrade:
+    db-type: dm
+
+demo:
+  upgrade:
+    script-dir: upgrade-scripts/dm

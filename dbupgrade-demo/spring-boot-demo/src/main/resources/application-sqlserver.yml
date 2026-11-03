@@ -1,0 +1,20 @@
+# ============================================================================
+# SQL Server · 2016 及以上
+# 脚本里用了 CREATE OR ALTER VIEW，这是 2016 SP1 才有的语法；
+# 更早的版本要改成 IF OBJECT_ID(...) IS NOT NULL DROP VIEW 再 CREATE。
+# encrypt=false 是给本地实例用的，正式环境请按实际调整。
+# ============================================================================
+spring:
+  datasource:
+    url: 'jdbc:sqlserver://127.0.0.1:1433;databaseName=orivone_upgrade_demo;encrypt=false'
+    username: sa
+    password: 'YourStrong!Passw0rd'
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+orivone:
+  dbupgrade:
+    db-type: sqlserver
+
+demo:
+  upgrade:
+    script-dir: upgrade-scripts/sqlserver

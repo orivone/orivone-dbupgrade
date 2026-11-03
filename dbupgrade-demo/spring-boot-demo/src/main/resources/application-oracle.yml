@@ -1,0 +1,20 @@
+# ============================================================================
+# Oracle · 12c 及以上
+# 自增依赖 IDENTITY；11g 没有这个特性，得改序列 + 触发器，脚本也要另写一份。
+# SID 形式的连接串是 jdbc:oracle:thin:@127.0.0.1:1521:orcl，
+# 下面用的是服务名写法（XEPDB1 是 12c 之后默认的 PDB 名）。
+# ============================================================================
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//127.0.0.1:1521/XEPDB1
+    username: orivone_upgrade_demo
+    password: orivone_upgrade_demo
+    driver-class-name: oracle.jdbc.OracleDriver
+
+orivone:
+  dbupgrade:
+    db-type: oracle
+
+demo:
+  upgrade:
+    script-dir: upgrade-scripts/oracle

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.orivone</groupId>
+        <artifactId>dbupgrade-demo</artifactId>
+        <version>1.0.1</version>
+    </parent>
+
+    <artifactId>spring-boot-demo</artifactId>
+    <version>1.0.1</version>
+
+    <!--
+        ============================================================================
+        Spring Boot 接入示例 + 三线回归开关
+        ============================================================================
+
+        接入方式：引入 starter 后，升级组件由自动配置装配，业务方只需写注册表 + 配置。
+        两个注册表分别演示：多分组、版本内文件顺序与文件名字母序无关、install 基线。
+
+        回归用途：本模块可以用 profile 在三个 Boot 版本上各编译一遍，
+        用来证明 starter 的「一份源码通吃 2.7 / 3.x / 4.x」不是口号：
+
+            mvn -pl dbupgrade-demo/spring-boot-demo -am install            # 默认 Boot 4.1
+            mvn -pl dbupgrade-demo/spring-boot-demo -am -Pboot3 install    # Boot 3.4
+            mvn -pl dbupgrade-demo/spring-boot-demo -am -Pboot2 install    # Boot 2.7
+
+        三个 profile 只改两件事：Boot 版本号、字节码 release。
+        代码与 SQL 脚本一份都不用改 —— 这正是要验证的东西。
+
+        为什么 Boot 2.7 那条线用 release 8：
+        Boot 2.7 本身支持 Java 8，用 8 编译可以同时证明「demo 代码没有依赖 9+ 语法」。
+        Boot 3/4 最低 JDK 17，必须 release 17。
+    -->
+    <dependencies>
+
+        <dependency>
+            <groupId>com.orivone</groupId>
+            <artifactId>orivone-dbupgrade-spring-boot-starter</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <!--
+            starter 里的 Spring 依赖都是 provided，不会传递过来，
+            所以 demo 必须自己声明 starter 与 jdbc（使用方也一样）。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <!--
+            ========================================================================
+            数据库驱动（全部 runtime，仅 demo 使用）
+            ========================================================================
+            一个 profile 一个库，也就一个驱动。真实工程按自己的库引其中一个，
+            不要把这一堆都带进生产依赖。
+
+            版本在这里显式写死，是因为 Boot 2.7.18 的 BOM 管的是
+            postgresql 42.3.8 / mssql-jdbc 10.2.3.jre8 这类老版本，
+            被它覆盖后可能连不上新版数据库。MySQL 驱动例外：
+            由根 pom 的 mysql.version（8.0.33）统一管理，能横跨 5.7 / 8.0 / 8.4。
+            ========================================================================
+        -->
+
+        <!-- MySQL 5.7+ / MariaDB -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- PostgreSQL 及其衍生库（人大金仓 / openGauss / GaussDB / HighGo / Vastbase） -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.7</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Oracle：ojdbc8 是 Java 8 基线版本，ojdbc11 需要 JDK 11+ -->
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>23.5.0.24.07</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 达梦 DM -->
+        <dependency>
+            <groupId>com.dameng</groupId>
+            <artifactId>DmJdbcDriver18</artifactId>
+            <version>8.1.3.62</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+            SQL Server。13.x 驱动自带 Java 11 字节码，跑这个 profile 需要 JDK 11+；
+            JDK 8 环境下换成 10.2.3.jre8 即可（框架产物本身仍是 Java 8 字节码）。
+        -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>13.4.0.jre11</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+            H2：默认 profile 用它，所以是 runtime 而不是 test。
+            内存库意味着 demo 不需要先装任何数据库，克隆下来就能跑。
+        -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+            三线兼容回归（BootCompatibilityTest）用：测试框架本身。
+            数据库仍是内存 H2（见上面的 runtime 依赖），不用外部 MySQL，
+            这样回归测试在任何机器上一条命令就能跑完。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            Redis 锁回归（RedisLockCompatibilityTest）用。
+
+            注意这是一个 test scope 依赖，demo 主程序并不依赖 Redisson —— 这正是改造后的形态：
+            starter 自带「数据库单表锁」，需要 Redis 锁的项目才额外引入本模块。
+            本模块自带 RedissonLockAutoConfiguration，引进来即可生效，starter 不需要改一行代码。
+        -->
+        <dependency>
+            <groupId>com.orivone</groupId>
+            <artifactId>orivone-dbupgrade-lock-redisson</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${demo.spring-boot.version}</version>
+                <configuration>
+                    <mainClass>com.orivone.dbupgrade.demo.spring.UpgradeDemoApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!--
+        让 starter 与 jdbc starter 的传递依赖（spring-core / spring-jdbc / spring-tx ...）
+        全部对齐到「当前 profile 选中的那一条 Boot 版本」。
+        根 pom 里 import 的是 2.7.18，这里 import 当前版本会被本模块自己的
+        dependencyManagement 覆盖，从而实现「同模块换版本」。
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${demo.spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <profiles>
+
+        <profile>
+            <id>boot4</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <demo.spring-boot.version>${spring-boot4.version}</demo.spring-boot.version>
+                <maven.compiler.release>17</maven.compiler.release>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>boot3</id>
+            <properties>
+                <demo.spring-boot.version>${spring-boot3.version}</demo.spring-boot.version>
+                <maven.compiler.release>17</maven.compiler.release>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>boot2</id>
+            <properties>
+                <demo.spring-boot.version>${spring-boot2.version}</demo.spring-boot.version>
+                <maven.compiler.release>8</maven.compiler.release>
+            </properties>
+        </profile>
+
+    </profiles>
+
+</project>

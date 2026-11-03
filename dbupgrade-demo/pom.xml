@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.orivone</groupId>
+        <artifactId>orivone-dbupgrade</artifactId>
+        <version>1.0.1</version>
+    </parent>
+
+    <artifactId>dbupgrade-demo</artifactId>
+    <version>1.0.1</version>
+    <packaging>pom</packaging>
+
+    <!--
+        ============================================================================
+        demo 不发布
+        ============================================================================
+
+        demo 是验证工程，不应出现在中央仓库。一旦被 mvn deploy 带上，后果不可逆：
+
+        - spring-boot-demo 是 Boot 4 + JDK 17 编译的 fat jar（含全部驱动，几十 MB），
+          上传后会永久留在 Central 上；
+        - 它还会把 spring-boot-starter-jdbc 之类的依赖写进 Central 的依赖索引，
+          与正式坐标混在一起。
+
+        maven.deploy.skip 只拦上传，install 仍会装进本地仓库，
+        因此 `mvn clean install` 之后 demo 照常在本地可用。
+
+        正式发布时还会在 -pl 里把 demo 排除出 reactor，那比 deploy.skip 更彻底：
+        连编译都不会发生（发布用 JDK 8，demo 需要 JDK 17）。见 CONTRIBUTING.md。
+        这里的 skip 用于兜住直接执行 `mvn -Pcentral deploy` 的情况。
+    -->
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.source.skip>true</maven.source.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <maven.gpg.skip>true</maven.gpg.skip>
+    </properties>
+
+    <!--
+        示例/验证工程，不参与生产依赖。
+
+        分两个子模块，对应两种接入方式：
+
+        - spring-boot-demo：Spring Boot 接入方式，依赖 orivone-dbupgrade-spring-boot-starter，
+          由 UpgradeRunner 在启动时自动接管升级。
+          这一个模块同时承担「Boot 2.7 / 3.x / 4.x 三线回归」的职责，
+          通过 profile 切换 Boot 版本（见该模块 pom 的文档注释）：
+              mvn -pl dbupgrade-demo/spring-boot-demo -am compile            # Boot 4.1（默认）
+              mvn -pl dbupgrade-demo/spring-boot-demo -am -Pboot3 compile    # Boot 3.4
+              mvn -pl dbupgrade-demo/spring-boot-demo -am -Pboot2 compile    # Boot 2.7
+
+        - jdbc-demo：不使用 Spring 的原生接入方式，只依赖 orivone-dbupgrade-core，
+          自己创建连接、自己调用升级入口。编译它不需要任何 Spring jar，
+          是「core 与 Spring 解耦」这条承诺的可执行证据。
+
+        三个 Boot 版本用 profile 切换而不是拆成三个模块：代码与脚本相同，
+        拆开只会产生三份需要同步维护的副本。
+    -->
+    <modules>
+        <module>spring-boot-demo</module>
+        <module>jdbc-demo</module>
+    </modules>
+
+</project>

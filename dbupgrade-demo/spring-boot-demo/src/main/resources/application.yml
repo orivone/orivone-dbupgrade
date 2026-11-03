@@ -1,0 +1,88 @@
+# ============================================================================
+# 数据库在线升级 Demo（Spring Boot 接入方式）· 公共配置
+#
+# 数据源不在这里：每种数据库一个 profile，各自带自己的连接串与驱动。
+#   application-h2.yml          内存库，零外部依赖，默认就是它
+#   application-mysql.yml       MySQL 5.7 ~ 8.4（需本机有可用实例）
+#   application-postgresql.yml  PostgreSQL 及其衍生库
+#   application-oracle.yml      Oracle 12c+
+#   application-dm.yml          达梦 DM8
+#   application-sqlserver.yml   SQL Server 2016+
+#
+# 跑哪个库由 profile 决定，默认 h2：
+#   mvn -pl dbupgrade-demo/spring-boot-demo spring-boot:run
+#   mvn -pl dbupgrade-demo/spring-boot-demo spring-boot:run -Dspring-boot.run.profiles=mysql
+#
+# 默认之所以是 h2 而不是 mysql：示例工程的职责是「克隆下来一条命令就能跑」，
+# 任何需要你先装库、建账号、授权限的默认值都会让第一次运行失败在无关的地方。
+#
+# 也可以直接改下面的 active，或用 --spring.profiles.active=mysql 启动。
+# ============================================================================
+spring:
+  profiles:
+    active: h2
+
+# 全局表前缀：只作用于下面三张框架表，不会改写业务脚本里的表名
+db:
+  table-prefix: jtest_
+
+orivone:
+  dbupgrade:
+    # 是否启用升级。false 时不注册任何升级组件
+    enabled: true
+
+    # 升级失败是否阻断启动。演示环境保持 true，问题暴露得更直接
+    fail-fast: true
+
+    # 记录表不存在时自动建表（先探测可读性，不可读才建）
+    auto-create-table: true
+
+    # 升级目标版本不需要配置：注册表里声明了哪些版本，就升到其中最高的那个。
+    # 要控制升级范围，增删对应注册表的 UpgradeVersion 即可。
+
+    # 锁实现：db（默认，数据库单表锁）/ redis（需额外引入 orivone-dbupgrade-lock-redisson）/ local（仅单机）
+    lock-type: db
+
+    # 是否全局单例执行：true=所有分组共用一把锁；false=按 group_code 分别加锁
+    global-lock: true
+
+    # 锁表名（lock-type=db 使用），与记录表共用同一个表前缀
+    lock-table: ${db.table-prefix}dbupgrade_lock
+
+    # 锁租期（秒）：db 模式下是僵尸锁的超期时间，redis 模式下是锁租期
+    lease-seconds: 1800
+
+    # 两张记录表名，支持占位符与 schema.table 形式
+    version-table: ${db.table-prefix}dbupgrade_version
+    record-table: ${db.table-prefix}dbupgrade_record
+
+    # 单条 SQL 执行超时（秒），0 表示不限制
+    query-timeout-seconds: 600
+
+    # 脚本扫描根目录，仅用于提示“存在但未在注册表声明”的文件，不参与执行。
+    # 这里故意指向 upgrade-scripts2：该目录下的脚本都没有在任何注册表中声明，
+    # 用于观察“存在未声明脚本”的提示日志。
+    script-root: upgrade-scripts2
+    check-undeclared-files: true
+
+    # 执行人标识，写入 dbupgrade_record.executed_by；不配则取主机名
+    operator: demo-node
+
+    # 数据库方言由各 profile 显式指定；
+    # auto 表示运行时从 DatabaseMetaData 自动探测，探测不到会启动失败并要求配置。
+    # db-type: auto
+
+    # 多数据源时必须显式指定升级使用哪个 DataSource，否则启动报错
+    # datasource-bean: masterDataSource
+
+demo:
+  upgrade:
+    # 业务脚本目录，由各 profile 覆盖（upgrade-scripts/h2、/mysql …）
+    # 之所以要按库分：DDL 方言不同，同一段建表语句没法跨库通用。
+    script-dir: upgrade-scripts/h2
+
+logging:
+  level:
+    root: WARN
+    # 升级模块保持 DEBUG，才能在控制台看到“执行了哪些 changeset、跳过了哪些”
+    com.orivone.dbupgrade: DEBUG

@@ -1,0 +1,22 @@
+# ============================================================================
+# H2 · 零依赖（默认 profile）
+# 内存库，不需要装任何数据库，克隆下来直接跑：
+#   mvn -pl dbupgrade-demo/spring-boot-demo spring-boot:run
+#
+# DB_CLOSE_DELAY=-1 不能省：框架为了「一个 changeset 一个会话」会反复借还连接，
+# 内存库如果在最后一个连接关闭时被销毁，后面的 changeset 会看到空库。
+# ============================================================================
+spring:
+  datasource:
+    url: jdbc:h2:mem:orivone_upgrade_demo;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+orivone:
+  dbupgrade:
+    db-type: h2
+
+demo:
+  upgrade:
+    script-dir: upgrade-scripts/h2

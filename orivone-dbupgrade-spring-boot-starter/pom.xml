@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.orivone</groupId>
+        <artifactId>orivone-dbupgrade</artifactId>
+        <version>1.0.1</version>
+    </parent>
+
+    <artifactId>orivone-dbupgrade-spring-boot-starter</artifactId>
+    <version>1.0.1</version>
+
+    <name>orivone-dbupgrade-spring-boot-starter</name>
+    <description>Spring Boot 自动装配：启动时触发升级，配置前缀 orivone.dbupgrade，一份源码兼容 2.7 / 3.x / 4.x</description>
+
+    <!--
+        ============================================================================
+        一份源码支持 Spring Boot 2.7 / 3.x / 4.x 的关键：按最低版本编译
+        ============================================================================
+
+        本模块只用到 ApplicationRunner、ApplicationArguments、@ConfigurationProperties、
+        @EnableConfigurationProperties、@AutoConfiguration（2.7 起）、条件注解、
+        ObjectProvider、BeanFactory 等类型，它们在三代 Boot 中的全限定名完全一致。
+        按 2.7 的 API 编过，3.x / 4.x 就一定能加载；反之按 4.x 编译的类在 2.7 上会缺类缺方法。
+
+        不要引用 org.springframework.boot.autoconfigure.jdbc.*：Boot 4 已把它迁到
+        org.springframework.boot.jdbc.autoconfigure.*。数据源一律用 ObjectProvider<DataSource>
+        在运行期获取，编译期不绑任何 DataSource 自动配置类。
+
+        auto-configuration 注册文件同时覆盖三代：
+          META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+          （2.7 起识别；2.7 另有 spring.factories 兼容，见 resources 目录）
+    -->
+    <dependencies>
+
+        <dependency>
+            <groupId>com.orivone</groupId>
+            <artifactId>orivone-dbupgrade-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <!--
+            Redis 锁（orivone-dbupgrade-lock-redisson）不在此声明。
+
+            它自带 RedissonLockAutoConfiguration 与 imports，需要时由业务方单独引入。
+            若在此声明成 compile 依赖，只用默认数据库锁的项目会被动带上
+            redisson + netty + kryo + rxjava 共 21 个包、约 14.5 MB，
+            而本 starter 连同 core 才 137 KB。
+        -->
+
+        <!--
+            ================== 编译期依赖（全部 provided）==================
+
+            provided 的作用有两层：
+            1) 编译期可见，能正常写代码；
+            2) 不打进使用方的传递依赖，也不锁死版本 —— 使用方引 Boot 2.7/3.x/4.x
+               时拿到的都是它自己那套 Spring，本 starter 不会顶掉任何版本。
+
+            spring-boot 提供 ApplicationRunner / ApplicationArguments /
+            @ConfigurationProperties / @EnableConfigurationProperties，
+            并顺带传递 spring-core、spring-context、spring-beans（provided 可传递到编译期）。
+            spring-boot-autoconfigure 提供 @AutoConfiguration 与条件注解。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>${spring-boot.baseline.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <version>${spring-boot.baseline.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- 本模块不引数据库驱动：驱动由使用方按自己的数据库提供 -->
+
+    </dependencies>
+
+</project>

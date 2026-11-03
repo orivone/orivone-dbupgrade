@@ -1,0 +1,19 @@
+# ============================================================================
+# PostgreSQL · 12 及以上
+# 人大金仓 / openGauss / GaussDB / 瀚高 / Vastbase 也走这条线，驱动与方言同源。
+# 库需要先建好：CREATE DATABASE orivone_upgrade_demo;
+# ============================================================================
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/orivone_upgrade_demo
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+orivone:
+  dbupgrade:
+    db-type: postgresql
+
+demo:
+  upgrade:
+    script-dir: upgrade-scripts/postgresql

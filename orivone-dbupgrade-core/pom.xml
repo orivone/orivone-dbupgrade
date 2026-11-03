@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.orivone</groupId>
+        <artifactId>orivone-dbupgrade</artifactId>
+        <version>1.0.1</version>
+    </parent>
+
+    <artifactId>orivone-dbupgrade-core</artifactId>
+    <version>1.0.1</version>
+
+    <!-- Central 对每个发布物单独校验 name / description，子模块不会继承父 pom 的这两项 -->
+    <name>orivone-dbupgrade-core</name>
+    <description>核心引擎：版本注册表、changeset 解析、checksum 校验与幂等执行，纯 JDBC 零框架依赖</description>
+
+    <!--
+        编译基线：Java 8（继承根 pom 的 maven.compiler.release=8），无需在此重复声明。
+    -->
+
+    <!--
+        ============================================================================
+        依赖约束：core 是零框架依赖的纯 JDBC 引擎
+        ============================================================================
+
+        - 不依赖 Spring：连接通过 ConnectionProvider 由调用方提供，语句执行走自研的
+          JdbcExecutor，脚本从 classpath / file / http 读取，全部使用 JDK 自带能力。
+        - 不依赖连接池、ORM、分布式锁：Redis 锁实现在可选模块
+          orivone-dbupgrade-lock-redisson 中。
+        - 唯一第三方依赖是日志门面 slf4j-api，且为 provided：不向使用方传递，
+          避免把某一版 slf4j 强加给业务工程。代价是脱离 Spring 单独使用 core 时，
+          需要自行引入 slf4j-api 与一个绑定实现。
+
+        引入 spring-boot-starter-jdbc 会破坏跨版本兼容：Boot 2.7 用 javax，
+        Boot 3+ 用 jakarta，同一个 jar 无法同时满足两代。
+    -->
+    <dependencies>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>

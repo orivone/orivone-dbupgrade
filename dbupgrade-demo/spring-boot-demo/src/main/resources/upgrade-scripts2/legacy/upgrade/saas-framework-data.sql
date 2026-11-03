@@ -1,0 +1,8 @@
+--dbupgrade formatted sql
+--changeset orivone:saas_framework_data_version_1.0.0
+ delete from sys_menu_button where id in ('1905914397419769856',
+                                         '1905914462964158464',
+                                         '1905914721136152576');
+INSERT INTO `sys_menu_button` (`id`, `create_time`, `create_by`, `update_by`, `update_time`, `version`, `is_del`, `name`, `front_permission_code`, `pid`, `remark`, `is_enable`, `order_no`, `permission_code`) VALUES ('1905914397419769856', '2025-03-29 17:26:17', '1', NULL, NULL, '0', '0', '新增', 'system:tenant:add', '1905914286434291712', NULL, '1', '1.00', 'system:tenant:add');
+INSERT INTO `sys_menu_button` (`id`, `create_time`, `create_by`, `update_by`, `update_time`, `version`, `is_del`, `name`, `front_permission_code`, `pid`, `remark`, `is_enable`, `order_no`, `permission_code`) VALUES ('1905914462964158464', '2025-03-29 17:26:33', '1', NULL, NULL, '0', '0', '修改', 'system:tenant:update', '1905914286434291712', NULL, '1', '2.00', 'system:tenant:update');
+INSERT INTO `sys_menu_button` (`id`, `create_time`, `create_by`, `update_by`, `update_time`, `version`, `is_del`, `name`, `front_permission_code`, `pid`, `remark`, `is_enable`, `order_no`, `permission_code`) VALUES ('1905914721136152576', '2025-03-29 17:27:34', '1', NULL, NULL, '0', '0', '删除', 'system:tenant:delete', '1905914286434291712', NULL, '1', '3.00', 'system:tenant:delete');
